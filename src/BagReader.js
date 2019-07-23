@@ -180,7 +180,10 @@ export default class BagReader {
         // $FlowFixMe https://github.com/facebook/flow/issues/1163
         return indices[conn].indices[Symbol.iterator]();
       });
-      const iter = nmerge((a, b) => TimeUtil.compare(a.time, b.time), ...iterables);
+
+      //messages should be merge by file offset so the messages are replayed in
+      // their original order, similar to 'rosbag play'
+      const iter = nmerge((a, b) => a.offset - b.offset, ...iterables);
 
       const entries = [];
       let item = iter.next();
