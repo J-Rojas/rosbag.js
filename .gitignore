@@ -1,6 +1,5 @@
 node_modules
 yarn-error.log
 build
-dist
 junit.xml
 .DS_Store
