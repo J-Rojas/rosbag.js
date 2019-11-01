@@ -26,19 +26,19 @@ export class Reader {
   // callback(err, buffer)
   read(offset: number, length: number, cb: Callback<Buffer>) {
     const reader = new FileReader();
-    reader.onload = function() {
+    reader.onload = function () {
       // $FlowFixMe - flow doesn't allow null
       reader.onload = null;
       // $FlowFixMe - flow doesn't allow null
       reader.onerror = null;
-      setImmediate(cb, null, Buffer.from(reader.result));
+      setTimeout(() => cb(null, Buffer.from(reader.result)), 0);
     };
-    reader.onerror = function() {
+    reader.onerror = function () {
       // $FlowFixMe - flow doesn't allow null
       reader.onload = null;
       // $FlowFixMe - flow doesn't allow null
       reader.onerror = null;
-      setImmediate(cb, new Error(reader.error));
+      setTimeout(() => cb(new Error(reader.error)), 0);
     };
     reader.readAsArrayBuffer(this._blob.slice(offset, offset + length));
   }

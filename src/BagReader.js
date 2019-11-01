@@ -236,7 +236,7 @@ export default class BagReader {
       // always callback async, even if we have the result
       // https://oren.github.io/blog/zalgo.html
       const lastReadResult = this._lastReadResult;
-      return setImmediate(() => callback(null, lastReadResult));
+      return setTimeout(() => callback(null, lastReadResult), 0);
     }
     const { nextChunk } = chunkInfo;
 

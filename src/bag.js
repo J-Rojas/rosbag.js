@@ -15,10 +15,10 @@ import * as TimeUtil from "./TimeUtil";
 
 export type ReadOptions = {|
   decompress?: Decompress,
-  noParse?: boolean,
-  topics?: string[],
-  startTime?: Time,
-  endTime?: Time,
+    noParse ?: boolean,
+    topics ?: string[],
+    startTime ?: Time,
+    endTime ?: Time,
 |};
 
 // the high level rosbag interface
@@ -71,7 +71,7 @@ export default class Bag {
     }
   }
 
-  async readMessages(opts: ReadOptions, callback: (msg: ReadResult<any>) => void) {
+  async readMessages(opts: ReadOptions, callback: (msg: ReadResult<any>) => Boolean) {
     const connections = this.connections;
 
     const startTime = opts.startTime || { sec: 0, nsec: 0 };
@@ -117,7 +117,10 @@ export default class Bag {
         endTime,
         decompress
       );
-      messages.forEach((msg) => callback(parseMsg(msg, i)));
+      var retCallback = true;
+      for (var j = 0; j < messages.length && retCallback; j++) {
+        retCallback = callback(parseMsg(messages[j], j));
+      }
     }
   }
 }
