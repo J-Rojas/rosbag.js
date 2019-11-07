@@ -12,6 +12,7 @@ import ReadResult from "./ReadResult";
 import { BagHeader, ChunkInfo, Connection, MessageData } from "./record";
 import type { Time } from "./types";
 import * as TimeUtil from "./TimeUtil";
+import { interval } from "rxjs";
 
 export type ReadOptions = {|
   decompress?: Decompress,
@@ -19,7 +20,8 @@ export type ReadOptions = {|
     topics ?: string[],
     startTime ?: Time,
     endTime ?: Time,
-|};
+    intervalTime ?: Number
+      |};
 
 // the high level rosbag interface
 // create a new bag by calling:
@@ -71,7 +73,7 @@ export default class Bag {
     }
   }
 
-  async readMessages(opts: ReadOptions, callback: (msg: ReadResult<any>) => Boolean) {
+  readMessages(opts: ReadOptions, callback: (msg: ReadResult<any>) => Boolean) {
     const connections = this.connections;
 
     const startTime = opts.startTime || { sec: 0, nsec: 0 };
@@ -108,19 +110,42 @@ export default class Bag {
       return new ReadResult(topic, message, timestamp, data, chunkOffset, chunkInfos.length);
     }
 
-    for (let i = 0; i < chunkInfos.length; i++) {
-      const info = chunkInfos[i];
-      const messages = await this.reader.readChunkMessagesAsync(
-        info,
-        filteredConnections,
-        startTime,
-        endTime,
-        decompress
-      );
+    const timer = opts.intervalTime || 100;
+
+    return new Promise((resolve, reject) => {
       var retCallback = true;
-      for (var j = 0; j < messages.length && retCallback; j++) {
-        retCallback = callback(parseMsg(messages[j], j));
-      }
-    }
+      var moreData = true;
+      var chunkIndex = 0;
+      var time = Date.now();
+      var tick = function (time) {
+        if (chunkIndex < chunkInfos.length && retCallback) {
+          const info = chunkInfos[chunkIndex];
+          this.reader.readChunkMessagesAsync(
+            info,
+            filteredConnections,
+            startTime,
+            endTime,
+            decompress
+          ).then(messages => {
+            messages.every((msg, j) => {
+              retCallback |= callback(parseMsg(msg, j));
+              return retCallback
+            });
+            chunkIndex++;
+            if (Date.now() - time <= timer) {
+              tick.call(this);
+            } else {
+              setTimeout(() => {
+                time = Date.now();
+                tick.call(this);
+              }, 0);
+            }
+          }).catch(reject);
+        } else {
+          resolve(retCallback);
+        }
+      };
+      tick.call(this);
+    });
   }
 }
