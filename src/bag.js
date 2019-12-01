@@ -12,7 +12,6 @@ import ReadResult from "./ReadResult";
 import { BagHeader, ChunkInfo, Connection, MessageData } from "./record";
 import type { Time } from "./types";
 import * as TimeUtil from "./TimeUtil";
-import { interval } from "rxjs";
 
 export type ReadOptions = {|
   decompress?: Decompress,
