@@ -183,7 +183,10 @@ export default class BagReader {
 
       //messages should be merge by file offset so the messages are replayed in
       // their original order, similar to 'rosbag play'
-      const iter = nmerge((a, b) => a.offset - b.offset, ...iterables);
+      const iter = nmerge((a, b) => {
+        const timeDiff = TimeUtil.compare(a.time, b.time)
+        return timeDiff == 0 ? a.offset - b.offset : timeDiff
+      }, ...iterables);
 
       const entries = [];
       let item = iter.next();
