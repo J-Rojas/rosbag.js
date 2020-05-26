@@ -12,7 +12,7 @@
     "node": ">=8.0.0"
   },
   "main": "dist/node",
-  "module": "src/web/index.js", 
+  "module": "src/web/index.js",
   "browser": "dist/web",
   "files": [
     "src",
