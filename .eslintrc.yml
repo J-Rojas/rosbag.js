@@ -4,9 +4,8 @@ env:
   es6: true
   jest: true
 extends:
-  - airbnb
-  - eslint:recommended
   - plugin:flowtype/recommended
+  - airbnb  
   - prettier
   - prettier/flowtype
 parser: babel-eslint
@@ -17,6 +16,7 @@ parserOptions:
   sourceType: module
 plugins:
   - flowtype
+  - prettier
   - flow-header
 globals:
   GIT_INFO: false

@@ -137,7 +137,7 @@ export default class Bag {
               setTimeout(() => {
                 time = Date.now();
                 tick.call(this);
-              }, 0);
+              }, 10);
             }
           }).catch(reject);
         } else {
