@@ -109,7 +109,7 @@ export default class Bag {
       return new ReadResult(topic, message, timestamp, data, chunkOffset, chunkInfos.length);
     }
 
-    const timer = opts.intervalTime || 100;
+    const timer = opts.intervalTime || 10;
 
     return new Promise((resolve, reject) => {
       var retCallback = true;
@@ -134,10 +134,10 @@ export default class Bag {
             if (Date.now() - time <= timer) {
               tick.call(this);
             } else {
-              setTimeout(() => {
+              requestAnimationFrame(() => {
                 time = Date.now();
                 tick.call(this);
-              }, 10);
+              });
             }
           }).catch(reject);
         } else {
