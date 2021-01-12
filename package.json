@@ -12,11 +12,12 @@
     "node": ">=8.0.0"
   },
   "main": "dist/node",
-  "module": "src/web/index.js",
+  "module": "esm/web/index.js",
   "browser": "dist/web",
   "files": [
     "src",
     "dist",
+    "esm",
     "LICENSE",
     "README.md"
   ],
@@ -25,8 +26,10 @@
     "test": "yarn run jest --verbose && yarn run lint",
     "clean": "rm -rf build dist",
     "build": "yarn run clean && mkdir -p dist && yarn run flow && yarn run build-node && yarn run build-web && yarn run flow-copy-source src dist",
+    "strip": "yarn run flow-remove-types src/ -d esm/ --pretty",
     "build-node": "cross-env ROSBAG_TARGET=node webpack --mode development",
-    "build-web": "cross-env ROSBAG_TARGET=web webpack --mode development"
+    "build-web": "cross-env ROSBAG_TARGET=web webpack --mode development",
+    "prepare": "yarn run strip"
   },
   "devDependencies": {
     "@babel/cli": "7.1.2",
@@ -51,6 +54,7 @@
     "eslint-plugin-react": "7.11.1",
     "flow-bin": "0.83.0",
     "flow-copy-source": "2.0.2",
+    "flow-remove-types": "^2.142.0",
     "flow-typed": "2.5.1",
     "jest": "23.6.0",
     "jest-cli": "23.6.0",
