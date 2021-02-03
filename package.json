@@ -22,14 +22,14 @@
     "README.md"
   ],
   "scripts": {
-    "lint": "yarn run flow && eslint src && prettier -l 'src/**/*.js'",
-    "test": "yarn run jest --verbose && yarn run lint",
+    "lint": "npx flow && eslint src && prettier -l 'src/**/*.js'",
+    "test": "npx jest --verbose && npm run lint",
     "clean": "rm -rf build dist",
-    "build": "yarn run clean && mkdir -p dist && yarn run flow && yarn run build-node && yarn run build-web && yarn run flow-copy-source src dist",
-    "strip": "yarn run flow-remove-types src/ -d esm/ --pretty",
+    "build": "npm run clean && mkdir -p dist && npx flow && npm run build-node && npm run build-web && npx flow-copy-source src dist",
+    "strip": "npx flow-remove-types src/ -d esm/ --pretty",
     "build-node": "cross-env ROSBAG_TARGET=node webpack --mode development",
     "build-web": "cross-env ROSBAG_TARGET=web webpack --mode development",
-    "prepare": "yarn run strip"
+    "prepare": "npm run strip"
   },
   "devDependencies": {
     "@babel/cli": "7.1.2",
@@ -47,6 +47,7 @@
     "eslint": "5.7.0",
     "eslint-config-airbnb": "17.1.0",
     "eslint-config-prettier": "3.1.0",
+    "eslint-plugin-prettier": "3.3.1",
     "eslint-plugin-flow-header": "0.2.0",
     "eslint-plugin-flowtype": "3.0.0",
     "eslint-plugin-import": "^2.17.2",
