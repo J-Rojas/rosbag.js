@@ -1,4 +1,4 @@
-// Copyright (c) 2018-present, GM Cruise LLC
+// Copyright (c) 2018-present, Cruise LLC
 
 // This source code is licensed under the Apache License, Version 2.0,
 // found in the LICENSE file in the root directory of this source tree.
@@ -22,3 +22,26 @@ export interface Filelike {
   read(offset: number, length: number, callback: Callback<Buffer>): void;
   size(): number;
 }
+
+export type RosMsgField = {|
+  type: string,
+  name: string,
+  isComplex?: boolean,
+
+  // For arrays
+  isArray?: boolean,
+  arrayLength?: ?number,
+
+  // For constants
+  isConstant?: boolean,
+  value?: mixed,
+|};
+
+export type RosMsgDefinition = {|
+  name?: string,
+  definitions: RosMsgField[],
+|};
+export type NamedRosMsgDefinition = {|
+  name: string,
+  definitions: RosMsgField[],
+|};

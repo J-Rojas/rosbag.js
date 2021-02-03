@@ -1,4 +1,4 @@
-// Copyright (c) 2018-present, GM Cruise LLC
+// Copyright (c) 2018-present, Cruise LLC
 
 // This source code is licensed under the Apache License, Version 2.0,
 // found in the LICENSE file in the root directory of this source tree.
@@ -12,6 +12,7 @@ import ReadResult from "./ReadResult";
 import { BagHeader, ChunkInfo, Connection, MessageData } from "./record";
 import type { Time } from "./types";
 import * as TimeUtil from "./TimeUtil";
+import { parseMessageDefinition } from "./parseMessageDefinition";
 
 export type ReadOptions = {|
   decompress?: Decompress,
@@ -19,7 +20,8 @@ export type ReadOptions = {|
     topics ?: string[],
     startTime ?: Time,
     endTime ?: Time,
-    intervalTime ?: Number
+    intervalTime ?: Number,
+    freeze?: ?boolean
       |};
 
 // the high level rosbag interface
@@ -103,10 +105,12 @@ export default class Bag {
       let message = null;
       if (!opts.noParse) {
         // lazily create a reader for this connection if it doesn't exist
-        connection.reader = connection.reader || new MessageReader(connection.messageDefinition);
+        connection.reader =
+          connection.reader ||
+          new MessageReader(parseMessageDefinition(connection.messageDefinition), { freeze: opts.freeze });
         message = connection.reader.readMessage(data);
       }
-      return new ReadResult(topic, message, timestamp, data, chunkOffset, chunkInfos.length);
+      return new ReadResult(topic, message, timestamp, data, chunkOffset, chunkInfos.length, opts.freeze);
     }
 
     const timer = opts.intervalTime || 10;

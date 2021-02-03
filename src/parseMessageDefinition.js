@@ -1,10 +1,12 @@
-// Copyright (c) 2018-present, GM Cruise LLC
+// Copyright (c) 2018-present, Cruise LLC
 
 // This source code is licensed under the Apache License, Version 2.0,
 // found in the LICENSE file in the root directory of this source tree.
 // You may not use this file except in compliance with the License.
 
 // @flow
+
+import type { RosMsgField, RosMsgDefinition } from "./types";
 
 // Set of built-in ros types. See http://wiki.ros.org/msg#Field_Types
 export const rosPrimitiveTypes: Set<string> = new Set([
@@ -22,6 +24,7 @@ export const rosPrimitiveTypes: Set<string> = new Set([
   "uint64",
   "time",
   "duration",
+  "json",
 ]);
 
 function normalizeType(type: string) {
@@ -58,39 +61,10 @@ function newDefinition(type: string, name: string): RosMsgField {
   };
 }
 
-export type RosMsgField =
-  | {|
-      type: string,
-      name: string,
-      isConstant?: boolean,
-      isComplex?: boolean,
-      value?: mixed,
-      isArray?: false,
-      arrayLength?: void,
-    |}
-  | {|
-      type: string,
-      name: string,
-      isConstant?: boolean,
-      isComplex?: boolean,
-      value?: mixed,
-      isArray: true,
-      arrayLength: ?number,
-    |};
-
-export type RosMsgDefinition = {|
-  name?: string,
-  definitions: RosMsgField[],
-|};
-export type NamedRosMsgDefinition = {|
-  name: string,
-  definitions: RosMsgField[],
-|};
-
-const buildType = (lines: string[]): RosMsgDefinition => {
+const buildType = (lines: { isJson: boolean, line: string }[]): RosMsgDefinition => {
   const definitions: RosMsgField[] = [];
   let complexTypeName: ?string;
-  lines.forEach((line) => {
+  lines.forEach(({ isJson, line }) => {
     // remove comments and extra whitespace from each line
     const splits = line
       .replace(/#.*/gi, "")
@@ -112,6 +86,9 @@ const buildType = (lines: string[]): RosMsgDefinition => {
       }
       let value: any = matches[2];
       if (type !== "string") {
+        // handle special case of python bool values
+        value = value.replace(/True/gi, "true");
+        value = value.replace(/False/gi, "false");
         try {
           value = JSON.parse(value.replace(/\s*#.*/g, ""));
         } catch (error) {
@@ -140,7 +117,7 @@ const buildType = (lines: string[]): RosMsgDefinition => {
       const len = typeSplits[1].replace("]", "");
       definitions.push(newArrayDefinition(baseType, name, len ? parseInt(len, 10) : undefined));
     } else {
-      definitions.push(newDefinition(type, name));
+      definitions.push(newDefinition(isJson ? "json" : type, name));
     }
   });
   return { name: complexTypeName, definitions };
@@ -187,20 +164,27 @@ export function parseMessageDefinition(messageDefinition: string) {
     .map((line) => line.trim())
     .filter((line) => line);
 
-  let definitionLines: string[] = [];
+  let definitionLines: { isJson: boolean, line: string }[] = [];
   const types: RosMsgDefinition[] = [];
+  let nextDefinitionIsJson: boolean = false;
   // group lines into individual definitions
   allLines.forEach((line) => {
-    // skip comment lines
-    if (line.indexOf("#") === 0) {
+    // ignore comment lines unless they start with #pragma rosbag_parse_json
+    if (line.startsWith("#")) {
+      if (line.startsWith("#pragma rosbag_parse_json")) {
+        nextDefinitionIsJson = true;
+      }
       return;
     }
+
     // definitions are split by equal signs
-    if (line.indexOf("==") === 0) {
+    if (line.startsWith("==")) {
+      nextDefinitionIsJson = false;
       types.push(buildType(definitionLines));
       definitionLines = [];
     } else {
-      definitionLines.push(line);
+      definitionLines.push({ isJson: nextDefinitionIsJson, line });
+      nextDefinitionIsJson = false;
     }
   });
   types.push(buildType(definitionLines));

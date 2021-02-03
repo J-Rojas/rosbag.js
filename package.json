@@ -1,12 +1,12 @@
 {
   "name": "rosbag",
-  "version": "2.1.0",
+  "version": "2.6.3",
   "license": "Apache-2.0",
   "repository": "cruise-automation/rosbag.js",
   "dependencies": {
     "buffer": "5.2.1",
     "heap": "0.2.6",
-    "int53": "0.2.4"
+    "int53": "1.0.0"
   },
   "engines": {
     "node": ">=8.0.0"
@@ -22,7 +22,9 @@
     "README.md"
   ],
   "scripts": {
-    "lint": "npx flow && eslint src && prettier -l 'src/**/*.js'",
+    "prepack": "npm run build",
+    "lint": "npx flow && eslint src && prettier -l 'src/**/*.js'",    
+    "lint:fix": "eslint --fix src && prettier --write -l 'src/**/*.js'",
     "test": "npx jest --verbose && npm run lint",
     "clean": "rm -rf build dist",
     "build": "npm run clean && mkdir -p dist && npx flow && npm run build-node && npm run build-web && npx flow-copy-source src dist",
@@ -35,6 +37,7 @@
     "@babel/cli": "7.1.2",
     "@babel/core": "7.1.2",
     "@babel/plugin-proposal-class-properties": "7.1.0",
+    "@babel/plugin-proposal-optional-catch-binding": "7.10.1",
     "@babel/plugin-syntax-object-rest-spread": "7.0.0",
     "@babel/preset-env": "7.1.0",
     "@babel/preset-flow": "7.0.0",

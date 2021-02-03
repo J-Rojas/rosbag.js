@@ -34,19 +34,23 @@ Here is an example of reading messages from a rosbag in node.js:
 ```js
 const { open } = require('rosbag');
 
-// open a new bag at a given file location:
-const bag = await open('../path/to/ros.bag');
+async function logMessagesFromFooBar() {
+  // open a new bag at a given file location:
+  const bag = await open('../path/to/ros.bag');
 
-// read all messages from both the '/foo' and '/bar' topics:
-await bag.readMessages({ topics: ['/foo', '/bar'] }, (result) => {
-  // topic is the topic the data record was in
-  // in this case it will be either '/foo' or '/bar'
-  console.log(result.topic);
+  // read all messages from both the '/foo' and '/bar' topics:
+  await bag.readMessages({ topics: ['/foo', '/bar'] }, (result) => {
+    // topic is the topic the data record was in
+    // in this case it will be either '/foo' or '/bar'
+    console.log(result.topic);
 
-  // message is the parsed payload
-  // this payload will likely differ based on the topic
-  console.log(result.message);
-});
+    // message is the parsed payload
+    // this payload will likely differ based on the topic
+    console.log(result.message);
+  });
+}
+
+logMessagesFromFooBar();
 ```
 
 ## API
@@ -117,15 +121,26 @@ const bagOptions = {
   decompress?: {|
     bz2?: (buffer: Buffer, uncompressedByteLength: number) => Buffer,
     lz4?: (buffer: Buffer, uncompressedByteLength: number) => Buffer,
-  |}
+  |},
 
   // by default the individual parsed binary messages will be parsed based on their [ROS message definition](http://wiki.ros.org/msg)
   // if you set noParse to true the read operation will skip the message parsing step
-  noParse?: boolean
+  noParse?: boolean,
+
+  // Whether the resulting messages should be deeply frozen using Object.freeze(). (default: false)
+  // Useful to make sure your code or libraries doesn't accidentally mutate bag messages.
+  freeze?: boolean,
 }
 ```
 
 All options are optional and used to filter down from the sometimes enormous and varied data records in a rosbag. One could omit all options & filter the messages in memory within the `readMessages` callback; however, due to the rosbag format optimizations can be made during reading & parsing which will yield _significant_ performance and memory gains if you specify topics and/or date ranges ahead of time.
+
+For ROS message definitions that contain a string field preceded by a `#pragma rosbag_parse_json` comment, rosbag will parse that string field into JSON. For example, the message definition below has a `data` field containing stringified JSON; rosbag will parse that string into JSON while reading messages from a bag instance.
+
+```cpp
+#pragma rosbag_parse_json
+string data
+```
 
 ### ReadResult
 
@@ -217,4 +232,4 @@ interface TimeUtil {
 
 ## Supported platforms
 
-Currently rosbag is used & heavily tested in `node@10.x` as well as google chrome (via webpack).  It should also work under all modern browsers which have the [FileReader](https://caniuse.com/#feat=filereader) and [typed array](https://caniuse.com/#feat=typedarrays) APIs available.  If you run into issues with Firefox, Edge, or Safari please feel free to open an issue or submit a pull request with a fix.
+Currently rosbag is used & heavily tested in `node@10.x` as well as Google Chrome (via webpack).  It should also work under all modern browsers which have the [FileReader](https://caniuse.com/#feat=filereader) and [typed array](https://caniuse.com/#feat=typedarrays) APIs available.  If you run into issues with Firefox, Edge, or Safari please feel free to open an issue or submit a pull request with a fix.

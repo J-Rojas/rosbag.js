@@ -1,4 +1,4 @@
-// Copyright (c) 2018-present, GM Cruise LLC
+// Copyright (c) 2018-present, Cruise LLC
 
 // This source code is licensed under the Apache License, Version 2.0,
 // found in the LICENSE file in the root directory of this source tree.
@@ -138,6 +138,27 @@ describe("rosbag - high-level api", () => {
     });
   });
 
+  it("freezes when requested", async () => {
+    const [notFrozenMsg] = await fullyReadBag(FILENAME, { topics: ["/turtle1/cmd_vel"] });
+    expect(notFrozenMsg.message.linear).toEqual({ x: 2, y: 0, z: 0 });
+    notFrozenMsg.message.linear.z = 100;
+    expect(notFrozenMsg.message.linear).toEqual({ x: 2, y: 0, z: 100 });
+
+    const [frozenMsg] = await fullyReadBag(FILENAME, { topics: ["/turtle1/cmd_vel"], freeze: true });
+    expect(frozenMsg.message.linear).toEqual({ x: 2, y: 0, z: 0 });
+    expect(() => {
+      frozenMsg.message.linear.z = 100;
+    }).toThrow();
+    expect(() => {
+      frozenMsg.timestamp.sec = 0;
+    }).toThrow();
+    expect(() => {
+      // $FlowFixMe - adding invalid field
+      frozenMsg.test = "test";
+    }).toThrow();
+    // As far as I can tell, we can't make the Buffer / underlying ArrayBuffer immutable. :(
+  });
+
   it("reads messages filtered to a specific topic", async () => {
     const messages = await fullyReadBag(FILENAME, { topics: ["/turtle1/color_sensor"] });
     const topics = messages.map((msg) => msg.topic);
@@ -153,6 +174,41 @@ describe("rosbag - high-level api", () => {
     topics.forEach((topic) =>
       expect(topic === "/turtle1/color_sensor" || topic === "/turtle2/color_sensor").toBe(true)
     );
+  });
+
+  it("reads messages from a shuffled bag", async () => {
+    const topics = [
+      "/cloud_nodelet/parameter_descriptions",
+      "/cloud_nodelet/parameter_updates",
+      "/diagnostics",
+      "/gps/fix",
+      "/gps/rtkfix",
+      "/gps/time",
+      "/obs1/gps/rtkfix",
+      "/obs1/gps/time",
+      "/radar/range",
+      "/radar/tracks",
+      "/rosout",
+      "/tf",
+    ];
+    const messages = await fullyReadBag("demo-shuffled", {
+      topics,
+      noParse: true,
+      endTime: { sec: 1490148912, nsec: 600000000 },
+    });
+
+    // First make sure that the messages were actually shuffled.
+    const smallerMessages = messages.map(({ timestamp, chunkOffset }) => ({ timestamp, chunkOffset }));
+    expect(smallerMessages[0]).toBeDefined();
+    const sortedMessages = [...smallerMessages];
+    sortedMessages.sort((a, b) => TimeUtil.compare(a.timestamp, b.timestamp));
+    expect(smallerMessages).not.toEqual(sortedMessages);
+
+    // And make sure that the chunks were also overlapping, ie. their chunksOffets are interlaced.
+    expect(sortedMessages.map(({ chunkOffset }) => chunkOffset)).toEqual([0, 2, 0, 1, 1, 0, 0, 0, 2]);
+
+    // Now make sure that we have the number of messages that we expect from this fixture.
+    expect(messages).toHaveLength(9);
   });
 
   describe("compression", () => {

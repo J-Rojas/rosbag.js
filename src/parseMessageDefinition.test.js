@@ -1,4 +1,4 @@
-// Copyright (c) 2018-present, GM Cruise LLC
+// Copyright (c) 2018-present, Cruise LLC
 
 // This source code is licensed under the Apache License, Version 2.0,
 // found in the LICENSE file in the root directory of this source tree.
@@ -257,6 +257,33 @@ describe("parseMessageDefinition", () => {
             type: "string",
             isConstant: true,
             value: '"#comments" are ignored, and leading and trailing whitespace removed',
+          },
+        ],
+        name: undefined,
+      },
+    ]);
+  });
+
+  it("works with python boolean values", () => {
+    const messageDefinition = `
+      bool Alive=True
+      bool Dead=False
+    `;
+    const types = parseMessageDefinition(messageDefinition);
+    expect(types).toEqual([
+      {
+        definitions: [
+          {
+            name: "Alive",
+            type: "bool",
+            isConstant: true,
+            value: true,
+          },
+          {
+            name: "Dead",
+            type: "bool",
+            isConstant: true,
+            value: false,
           },
         ],
         name: undefined,
