@@ -11,6 +11,7 @@
   "engines": {
     "node": ">=8.0.0"
   },
+  "types": "src/rosbag.d.ts",
   "main": "dist/node",
   "module": "esm/web/index.js",
   "browser": "dist/web",
