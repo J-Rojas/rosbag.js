@@ -1,5 +1,5 @@
 declare module 'rosbag' {
-    import { IndexableObject } from "ros-web-vue/src/config/types";
+    import { IndexableObject } from "ros-web-vue/src/assets/utils/types";
     import { CachedMessage, Timestamp } from "ros-web-vue/src/core/types";
 
     export interface BagConnectionEntry {
