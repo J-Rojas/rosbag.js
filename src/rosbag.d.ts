@@ -15,6 +15,7 @@ declare module 'rosbag' {
         endTime: Timestamp
 
         readMessages(params: {
+            topics: string[],
             startTime: Timestamp,
             endTime: Timestamp,
             decompress: IndexableObject<Function>,
